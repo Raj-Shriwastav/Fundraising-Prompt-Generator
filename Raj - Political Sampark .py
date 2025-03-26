@@ -17,10 +17,10 @@ client.api_key = api_key  # Assign the key separately
 
 
 # Initialize OpenAI client with OpenRouter requirements
-client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key= api_key,
-)
+# client = OpenAI(
+#     base_url="https://openrouter.ai/api/v1",
+#     api_key= api_key,
+# )
 
 def call_deepseek_api(prompt: str) -> str:
     """
