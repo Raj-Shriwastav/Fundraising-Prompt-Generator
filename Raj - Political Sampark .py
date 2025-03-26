@@ -14,7 +14,7 @@ client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=api_key,
     default_headers={
-        "HTTP-Referer": "https://your-app-name.streamlit.app",  # Update with your deployed URL
+        "HTTP-Referer": "https://fundraiser-god.streamlit.app/",  # Update with your deployed URL
         "X-Title": "Startup Fundraising Assistant",
     },
 )
