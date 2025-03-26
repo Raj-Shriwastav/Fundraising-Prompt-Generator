@@ -1,11 +1,17 @@
 import streamlit as st
 from openai import OpenAI
 
+# Check if API key exists
+if "openrouter" not in st.secrets or "api_key" not in st.secrets["openrouter"]:
+    st.error("API key is missing. Please add it to secrets.toml or Streamlit Cloud secrets.")
+    st.stop()
+
 openrouter_api_key = st.secrets["openrouter"]["api_key"]
 
+# Initialize OpenAI client
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
-    api_key=openrouter_api_key,
+    api_key=openrouter_api_key
 )
 
 def call_deepseek_api(prompt: str) -> str:
@@ -14,16 +20,13 @@ def call_deepseek_api(prompt: str) -> str:
     """
     try:
         completion = client.chat.completions.create(
-            extra_headers={"Authorization": f"Bearer {openrouter_api_key}"},
             model="deepseek/deepseek-r1:free",
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ]
+            messages=[{"role": "user", "content": prompt}]
         )
-        return completion.choices[0].message.content
+        if hasattr(completion, "choices") and completion.choices:
+            return completion.choices[0].message.content
+        else:
+            return "API returned an empty response."
     except Exception as e:
         st.error(f"Error calling DeepSeek API: {e}")
         return "API call failed."
@@ -42,11 +45,10 @@ if mode == "Preset Mode":
         industry = st.text_input("Industry (e.g., SaaS, Fintech, HealthTech)")
         investor_type = st.selectbox("Target Investors", options=["Angel Investors", "Venture Capitalists", "Crowdfunding"])
         challenge = st.text_area("Specific Challenges (optional)",
-                                    help="Describe any specific issues you are facing, e.g., pitch deck, valuation concerns.")
+                                 help="Describe any specific issues you are facing, e.g., pitch deck, valuation concerns.")
         preset_submitted = st.form_submit_button("Generate Preset Prompt")
 
     if preset_submitted:
-        # Craft a prompt from the selected parameters.
         preset_prompt = (
             f"How can a {industry} startup at the {stage} stage attract {investor_type}? "
             f"Consider that the founder faces the following challenge: {challenge if challenge else 'No specific challenge provided.'}"
@@ -65,7 +67,7 @@ elif mode == "Custom Mode":
     st.subheader("Custom Prompt Generator")
     with st.form("custom_form"):
         custom_prompt = st.text_area("Enter your custom prompt below:", height=150,
-                                        help="Type any prompt you wish. You can include as much detail as needed.")
+                                     help="Type any prompt you wish. You can include as much detail as needed.")
         custom_submitted = st.form_submit_button("Generate Custom Prompt")
 
     if custom_submitted:
