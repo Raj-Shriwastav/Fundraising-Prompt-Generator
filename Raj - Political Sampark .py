@@ -1,11 +1,3 @@
-import os
-import subprocess
-try:
-    import openai
-except ImportError:
-    subprocess.check_call([os.sys.executable, "-m", "pip", "install", "openai"])
-    import openai
-
 import streamlit as st
 from openai import OpenAI
 
