@@ -1,4 +1,5 @@
 import os
+import subprocess
 try:
     import openai
 except ImportError:
