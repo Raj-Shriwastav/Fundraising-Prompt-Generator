@@ -1,14 +1,12 @@
 import streamlit as st
 from openai import OpenAI
 
-# Check if API key exists
 if "openrouter" not in st.secrets or "api_key" not in st.secrets["openrouter"]:
     st.error("API key is missing. Please add it to secrets.toml or Streamlit Cloud secrets.")
     st.stop()
 
 openrouter_api_key = st.secrets["openrouter"]["api_key"]
 
-# Initialize OpenAI client
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=openrouter_api_key
