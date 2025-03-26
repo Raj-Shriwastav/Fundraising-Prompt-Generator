@@ -1,9 +1,12 @@
 import streamlit as st
 from openai import OpenAI
-
 import os
-os.environ["OPENROUTER_API_KEY"] = st.secrets["OPENROUTER_API_KEY"]
-openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
+
+api_key = st.secrets.get("OPENROUTER_API_KEY", os.getenv("OPENROUTER_API_KEY"))
+if not api_key:
+    st.error("API key is missing. Please set it in Streamlit secrets or environment variables.")
+else:
+    os.environ["OPENROUTER_API_KEY"] = api_key
 
 # Initialize OpenAI client with OpenRouter requirements
 client = OpenAI(
