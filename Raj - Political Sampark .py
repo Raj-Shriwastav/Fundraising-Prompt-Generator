@@ -210,19 +210,9 @@ with st.sidebar:
 # Apply theme
 set_theme(st.session_state['dark_mode'])
 
-# Get API key directly from environment variable first
-api_key = os.getenv("GOOGLE_API_KEY")
-
-if not api_key:
-    # If not in environment, try to get from secrets
-    try:
-        api_key = st.secrets["GOOGLE_API_KEY"]
-    except:
-        st.error("Google API key is missing. Please set it in environment variables.")
-        st.stop()
 
 # Configure Gemini API
-genai.configure(api_key=api_key)
+genai.configure(api_key="AIzaSyBW-dTiQGvyAw7bpAEYsT4mPvcx6WWB4p0")
 model = genai.GenerativeModel('gemini-2.0-flash-thinking-exp-01-21')
 
 def call_gemini_api(prompt: str) -> str:
