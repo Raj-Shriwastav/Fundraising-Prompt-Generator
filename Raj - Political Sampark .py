@@ -10,17 +10,12 @@ else:
 
 st.write("API Key from Secrets:", api_key)  # Debugging: REMOVE in production
 
+# Initialize OpenAI client with OpenRouter requirements
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
+    api_key= api_key
 )
-client.api_key = api_key  # Assign the key separately
-
-
-# Initialize OpenAI client with OpenRouter requirements
-# client = OpenAI(
-#     base_url="https://openrouter.ai/api/v1",
-#     api_key= api_key,
-# )
+st.write(client.api_key)
 
 def call_deepseek_api(prompt: str) -> str:
     """
