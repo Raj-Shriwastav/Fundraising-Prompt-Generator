@@ -1,12 +1,6 @@
 import streamlit as st
 from openai import OpenAI
 
-# from dotenv import load_dotenv
-# load_dotenv()
-# import os
-
-# openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
-
 import os
 os.environ["OPENROUTER_API_KEY"] = st.secrets["OPENROUTER_API_KEY"]
 openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
@@ -15,10 +9,6 @@ openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=openrouter_api_key,
-    default_headers={
-        "HTTP-Referer": "https://your-app-url.com",  # Update with your actual URL
-        "X-Title": "Startup Fundraising Prompt Generator",
-    }
 )
 
 def call_deepseek_api(prompt: str) -> str:
