@@ -1,3 +1,4 @@
+import os
 try:
     import openai
 except ImportError:
@@ -6,10 +7,6 @@ except ImportError:
 
 import streamlit as st
 from openai import OpenAI
-import os
-import subprocess
-import openai
-import openai
 
 openrouter_api_key = "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" 
 
