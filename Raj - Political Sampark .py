@@ -8,6 +8,8 @@ if not api_key:
 else:
     os.environ["OPENROUTER_API_KEY"] = api_key
 
+st.write("API Key from Secrets:", api_key)  # Debugging: REMOVE in production
+
 # Initialize OpenAI client with OpenRouter requirements
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
