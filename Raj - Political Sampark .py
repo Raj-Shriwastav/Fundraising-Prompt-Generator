@@ -10,6 +10,12 @@ else:
 
 st.write("API Key from Secrets:", api_key)  # Debugging: REMOVE in production
 
+client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",
+)
+client.api_key = api_key  # Assign the key separately
+
+
 # Initialize OpenAI client with OpenRouter requirements
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
