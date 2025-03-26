@@ -1,31 +1,250 @@
 import streamlit as st
-from openai import OpenAI
+import google.generativeai as genai
 import os
+from pathlib import Path
 
-# Get API key from Streamlit secrets
-api_key = st.secrets.get("OPENROUTER_API_KEY", os.getenv("OPENROUTER_API_KEY"))
+# Theme configuration
+def set_theme(is_dark_mode):
+    if is_dark_mode:
+        st.markdown("""
+            <style>
+                /* Main app background */
+                .stApp {
+                    background-color: #0E1117;
+                    color: #FAFAFA;
+                }
+                
+                /* Sidebar */
+                section[data-testid="stSidebar"] {
+                    background-color: #262730;
+                    border-right: 1px solid #4B4B4B;
+                }
+                
+                /* Radio buttons in sidebar */
+                .stRadio > div {
+                    color: #FAFAFA !important;
+                }
+                .stRadio > div > div > label {
+                    color: #FAFAFA !important;
+                }
+                .stRadio > div > div > label > div {
+                    background-color: #4B4B4B !important;
+                    border: 2px solid #FAFAFA !important;
+                }
+                .stRadio > div > div > label:hover {
+                    background-color: #363940 !important;
+                }
+                
+                /* Sidebar title */
+                [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h1 {
+                    color: #FAFAFA !important;
+                    padding: 1rem 0;
+                }
+                
+                /* Buttons */
+                .stButton>button {
+                    color: #FAFAFA;
+                    background-color: #262730;
+                    border: 1px solid #4B4B4B;
+                }
+                
+                /* Text inputs */
+                .stTextInput>div>div>input {
+                    color: #FAFAFA !important;
+                    background-color: #262730 !important;
+                    border-color: #4B4B4B !important;
+                }
+                
+                /* Select boxes */
+                .stSelectbox>div>div>select {
+                    color: #FAFAFA !important;
+                    background-color: #262730 !important;
+                    border-color: #4B4B4B !important;
+                }
+                
+                /* Text areas */
+                .stTextArea>div>div>textarea {
+                    color: #FAFAFA !important;
+                    background-color: #262730 !important;
+                    border-color: #4B4B4B !important;
+                }
+                
+                /* Code blocks */
+                .stCodeBlock {
+                    background-color: #1E1E1E !important;
+                    border-color: #4B4B4B !important;
+                }
+                
+                /* Success/Info/Warning/Error boxes */
+                .stAlert {
+                    background-color: #262730;
+                    color: #FAFAFA;
+                    border: 1px solid #4B4B4B;
+                }
+                
+                /* Form container */
+                .stForm {
+                    background-color: #1E1E1E;
+                    padding: 1rem;
+                    border-radius: 5px;
+                    border: 1px solid #4B4B4B;
+                }
+                
+                /* Spinner */
+                .stSpinner > div {
+                    border-color: #FAFAFA !important;
+                }
+                
+                /* Headers */
+                h1, h2, h3 {
+                    color: #FAFAFA !important;
+                }
+            </style>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+            <style>
+                /* Main app background */
+                .stApp {
+                    background-color: #FFFFFF;
+                    color: #262730;
+                }
+                
+                /* Sidebar */
+                section[data-testid="stSidebar"] {
+                    background-color: #F0F2F6;
+                    border-right: 1px solid #E0E0E0;
+                }
+                
+                /* Radio buttons in sidebar */
+                .stRadio > div {
+                    color: #262730 !important;
+                }
+                .stRadio > div > div > label {
+                    color: #262730 !important;
+                }
+                .stRadio > div > div > label > div {
+                    background-color: #FFFFFF !important;
+                    border: 2px solid #262730 !important;
+                }
+                .stRadio > div > div > label:hover {
+                    background-color: #E6E6E6 !important;
+                }
+                
+                /* Sidebar title */
+                [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h1 {
+                    color: #262730 !important;
+                    padding: 1rem 0;
+                }
+                
+                /* Buttons */
+                .stButton>button {
+                    color: #262730;
+                    background-color: #FFFFFF;
+                    border: 1px solid #E0E0E0;
+                }
+                
+                /* Text inputs */
+                .stTextInput>div>div>input {
+                    color: #262730 !important;
+                    background-color: #FFFFFF !important;
+                    border-color: #E0E0E0 !important;
+                }
+                
+                /* Select boxes */
+                .stSelectbox>div>div>select {
+                    color: #262730 !important;
+                    background-color: #FFFFFF !important;
+                    border-color: #E0E0E0 !important;
+                }
+                
+                /* Text areas */
+                .stTextArea>div>div>textarea {
+                    color: #262730 !important;
+                    background-color: #FFFFFF !important;
+                    border-color: #E0E0E0 !important;
+                }
+                
+                /* Code blocks */
+                .stCodeBlock {
+                    background-color: #F8F9FA !important;
+                    border-color: #E0E0E0 !important;
+                }
+                
+                /* Success/Info/Warning/Error boxes */
+                .stAlert {
+                    background-color: #F8F9FA;
+                    color: #262730;
+                    border: 1px solid #E0E0E0;
+                }
+                
+                /* Form container */
+                .stForm {
+                    background-color: #FFFFFF;
+                    padding: 1rem;
+                    border-radius: 5px;
+                    border: 1px solid #E0E0E0;
+                }
+                
+                /* Headers */
+                h1, h2, h3 {
+                    color: #262730 !important;
+                }
+            </style>
+        """, unsafe_allow_html=True)
+
+# Set up configuration
+if not os.path.exists(".streamlit"):
+    os.makedirs(".streamlit")
+
+# Theme selection in sidebar with custom styling
+with st.sidebar:
+    st.markdown('<h1 style="margin-bottom: 2rem;">⚙️ Settings</h1>', unsafe_allow_html=True)
+    theme_mode = st.radio(
+        "Choose Theme",
+        ["Light Mode 🌞", "Dark Mode 🌙"],
+        index=1 if st.session_state.get('dark_mode', True) else 0
+    )
+    st.session_state['dark_mode'] = theme_mode == "Dark Mode 🌙"
+
+# Apply theme
+set_theme(st.session_state['dark_mode'])
+
+# Get API key directly from environment variable first
+api_key = os.getenv("GOOGLE_API_KEY")
 
 if not api_key:
-    st.error("API key is missing. Please set it in Streamlit secrets or environment variables.")
-    st.stop()
-
-# Initialize OpenAI Client with correct base URL
-client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-)
-client.api_key = api_key
-
-def call_deepseek_api(prompt: str) -> str:
+    # If not in environment, try to get from secrets
     try:
-        completion = client.chat.completions.create(
-            model="deepseek-ai/deepseek-r1:free",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.7,
-            max_tokens=1000
-        )
-        return completion.choices[0].message.content if completion.choices else "Empty response."
+        api_key = st.secrets["GOOGLE_API_KEY"]
+    except:
+        st.error("Google API key is missing. Please set it in environment variables.")
+        st.stop()
+
+# Configure Gemini API
+genai.configure(api_key=api_key)
+model = genai.GenerativeModel('gemini-2.0-flash-thinking-exp-01-21')
+
+def call_gemini_api(prompt: str) -> str:
+    try:
+        response = model.generate_content(prompt, stream=True)
+        
+        # Initialize an empty string to store the complete response
+        full_response = ""
+        
+        # Create a placeholder for the streaming response
+        response_placeholder = st.empty()
+        
+        # Stream the response
+        for chunk in response:
+            if chunk.text:
+                full_response += chunk.text
+                # Update the placeholder with the accumulated response
+                response_placeholder.markdown(full_response)
+        
+        return full_response
     except Exception as e:
-        st.error(f"Error calling API: {str(e)}")
+        st.error(f"Error calling Gemini API: {str(e)}")
         return "API call failed."
 
 # --- Streamlit App UI ---
@@ -62,17 +281,18 @@ if mode == "Preset Mode":
             f"As an expert startup fundraising advisor, how should a {industry.strip()} startup "
             f"at the {stage} stage approach {investor_type}? "
             f"Address these specific challenges: {challenge_text}. "
-            "Provide actionable strategies and common pitfalls to avoid."
+            "Provide actionable strategies and common pitfalls to avoid. "
+            "Format your response in markdown with clear headings and bullet points where appropriate."
         )
 
         # Display and process
         st.subheader("Crafted Preset Prompt")
         st.code(preset_prompt, language="text")
 
-        with st.spinner("Contacting Prompt God The Almighty..."):
-            preset_reply = call_deepseek_api(preset_prompt)
+        with st.spinner("Generating response with Gemini..."):
+            preset_reply = call_gemini_api(preset_prompt)
             
-        st.subheader("Behold Our Lord's Reply 🙏")
+        st.subheader("Generated Response")
         st.markdown(preset_reply)
         st.success("Preset prompt generation complete!")
 
@@ -93,9 +313,9 @@ elif mode == "Custom Mode":
         st.subheader("Your Custom Prompt")
         st.code(custom_prompt, language="text")
 
-        with st.spinner("Contacting Prompt God The Almighty..."):
-            custom_reply = call_deepseek_api(custom_prompt.strip())
+        with st.spinner("Generating response with Gemini..."):
+            custom_reply = call_gemini_api(custom_prompt.strip())
             
-        st.subheader("Behold Our Lord's Reply 🙏")
+        st.subheader("Generated Response")
         st.markdown(custom_reply)
         st.success("Custom prompt generation complete!")
