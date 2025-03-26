@@ -2,41 +2,37 @@ import streamlit as st
 from openai import OpenAI
 import os
 
+# Get API key
 api_key = st.secrets.get("OPENROUTER_API_KEY", os.getenv("OPENROUTER_API_KEY"))
+
+# Debugging (REMOVE in production)
+st.write("API Key:", "Found" if api_key else "Missing")
+
 if not api_key:
     st.error("API key is missing. Please set it in Streamlit secrets or environment variables.")
-else:
-    os.environ["OPENROUTER_API_KEY"] = api_key
+    st.stop()
 
-st.write("API Key from Secrets:", api_key)  # Debugging: REMOVE in production
+# Set environment variable (if needed)
+os.environ["OPENROUTER_API_KEY"] = api_key
 
-# Initialize OpenAI client with OpenRouter requirements
+# Initialize OpenAI Client
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
-    api_key= api_key
 )
-st.write(client.api_key)
+client.api_key = api_key  # Ensure API key is assigned
 
 def call_deepseek_api(prompt: str) -> str:
-    """
-    Call the DeepSeek model via OpenRouter API and return the generated text.
-    Handles API errors and unexpected response formats.
-    """
     try:
         completion = client.chat.completions.create(
-            model="deepseek-ai/deepseek-r1:free",  # Corrected model name
+            model="deepseek-ai/deepseek-r1:free",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
             max_tokens=1000
         )
-        
-        if completion.choices and completion.choices[0].message.content:
-            return completion.choices[0].message.content
-        return "API returned an empty response."
-    
+        return completion.choices[0].message.content if completion.choices else "Empty response."
     except Exception as e:
-        st.error(f"Error calling DeepSeek API: {str(e)}")
-        return "API call failed. Please try again."
+        st.error(f"Error calling API: {str(e)}")
+        return "API call failed."
 
 # --- Streamlit App UI ---
 st.title("Startup Fundraising Prompt Generator using Prompt God from Raj")
