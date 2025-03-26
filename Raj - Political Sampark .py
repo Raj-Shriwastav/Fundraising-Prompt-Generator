@@ -2,22 +2,18 @@ import streamlit as st
 from openai import OpenAI
 import os
 
-# Get API key
-api_key = st.secrets.get("OPENROUTER_API_KEY")
+# Get API key from Streamlit secrets
+api_key = st.secrets.get("OPENROUTER_API_KEY", os.getenv("OPENROUTER_API_KEY"))
 
 if not api_key:
-    st.error("API key is missing. Please set it in Streamlit secrets.")
+    st.error("API key is missing. Please set it in Streamlit secrets or environment variables.")
     st.stop()
 
-# Initialize OpenAI Client with OpenRouter requirements
+# Initialize OpenAI Client with correct base URL
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
-    api_key=api_key,
-    default_headers={
-        "HTTP-Referer": "https://fundraiser-god.streamlit.app/",  # Update with your deployed URL
-        "X-Title": "Startup Fundraising Assistant",
-    },
 )
+client.api_key = api_key
 
 def call_deepseek_api(prompt: str) -> str:
     try:
@@ -42,10 +38,12 @@ mode = st.radio("Select Prompt Mode:", options=["Preset Mode", "Custom Mode"], h
 if mode == "Preset Mode":
     st.subheader("Preset Prompt Generator")
     with st.form("preset_form"):
+        # Required fields
         stage = st.selectbox("Startup Stage", options=["Pre-seed", "Seed", "Series A", "Series B+"])
         industry = st.text_input("Industry (e.g., SaaS, Fintech, HealthTech)", placeholder="Enter your industry")
         investor_type = st.selectbox("Target Investors", options=["Angel Investors", "Venture Capitalists", "Crowdfunding"])
         
+        # Optional field
         challenge = st.text_area("Specific Challenges (optional)", 
                                help="Describe any specific issues you are facing, e.g., pitch deck, valuation concerns.",
                                placeholder="No specific challenges mentioned")
@@ -53,10 +51,12 @@ if mode == "Preset Mode":
         preset_submitted = st.form_submit_button("Generate Preset Prompt")
 
     if preset_submitted:
+        # Validate required fields
         if not industry.strip():
             st.warning("Please fill in the Industry field")
             st.stop()
             
+        # Build the prompt
         challenge_text = challenge if challenge.strip() else "No specific challenges mentioned"
         preset_prompt = (
             f"As an expert startup fundraising advisor, how should a {industry.strip()} startup "
@@ -65,6 +65,7 @@ if mode == "Preset Mode":
             "Provide actionable strategies and common pitfalls to avoid."
         )
 
+        # Display and process
         st.subheader("Crafted Preset Prompt")
         st.code(preset_prompt, language="text")
 
@@ -80,7 +81,8 @@ elif mode == "Custom Mode":
     with st.form("custom_form"):
         custom_prompt = st.text_area("Enter your custom prompt below:", 
                                    height=150,
-                                   placeholder="e.g., 'How to negotiate valuation with Series A investors in AI space?'")
+                                   placeholder="e.g., 'How to negotiate valuation with Series A investors in AI space?'",
+                                   help="Type any fundraising-related prompt you need help with.")
         custom_submitted = st.form_submit_button("Generate Custom Prompt")
 
     if custom_submitted:
